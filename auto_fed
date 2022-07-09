@@ -1,0 +1,61 @@
+#!/bin/sh
+
+sudo hostnamectl set-hostname "BISHWAJIT"
+mkdir Downloads Documents Videos Applications tmpmount
+sudo mount /dev/sda8 tmpmount
+cd /home/tirtha/tmpmount/postinstall
+sudo cp -f etc_dnf_dnf.conf /etc/dnf/dnf.conf
+
+sudo dnf install https://download1.rpmfusion.org/free/fedora/rpmfusion-free-release-36.noarch.rpm
+
+sudo dnf install https://download1.rpmfusion.org/nonfree/fedora/rpmfusion-nonfree-release-36.noarch.rpm
+
+sudo dnf install $(cat dnfpackages)
+
+sudo  cp etc_NetworkManager_conf.d_wifi-backend.conf /etc/NetworkManager/conf.d/wifi-backend.conf
+sudo cp etc_systemd_resolved.conf /etc/systemd/resolved.conf
+sudo cp etc_systemd_logind.conf /etc/systemd/logind.conf
+sudo cp 10-monitor.conf 20-intel.conf 40-libinput.conf /etc/X11/xorg.conf.d
+
+sudo systemctl enable lightdm.service
+sudo systemctl set-default graphical.target
+
+chmod +x Qogir-theme/install.sh
+sudo Qogir-theme/./install.sh
+cp -r .fonts .icons .mozilla /home/tirtha
+sudo cp -r .fonts/* /usr/share/fonts
+sudo cp -r .icons/* /usr/share/icons
+sudo cp -r wallpapers/* /usr/share/backgrounds
+
+#gitstuff
+cd clipnotify && sudo make install && cd ..
+cd clipmenu && sudo make install && cd ..
+cd ytfzf && sudo make install && cd ..
+
+#gitsetup
+
+cd /home/tirtha
+mkdir /home/tirtha/dotfiles
+git init --bare /home/tirtha/dotfiles
+config="/usr/bin/git --git-dir=/home/tirtha/dotfiles --work-tree=$HOME"
+$config config --local status.showUntrackedFiles no
+$config remote add dotfiles git@gitlab.com:bktirtha/dotfiles.git
+$config config --global user.email "bishwajitkar1999@gmail.com"
+$config pull dotfiles master
+
+#symlinks
+ln -s ~/Applications/scripts/scrot-scr.sh ~/.local/bin/scrot-scr
+ln -s ~/Applications/scripts/noti/notify-send.sh ~/.local/bin/notify-send
+ln -s ~/Applications/bins/lf-bin/lf ~/.local/bin
+ln -s ~/.config/lf/lfrun ~/.local/bin/lfrun
+pip3 install pip --upgrade
+pip3 install ueberzug
+
+#mpd & other user services
+sudo systemctl disable mpd.service 
+systemctl --user daemon-reload
+systemctl --user enable mpd_user.service
+systemctl --user enable mpDris.service
+systemctl --user enable redshift.service
+systemctl --user enable clipmenud.service
+
